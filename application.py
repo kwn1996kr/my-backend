@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
 from flaskext.mysql import MySQL
+import redis
 
 application = Flask(__name__)
 
@@ -17,10 +18,13 @@ application.config['MYSQL_DATABASE_DB'] = os.environ["MYSQL_DATABASE_DB"]
 application.config['MYSQL_DATABASE_HOST'] = os.environ["MYSQL_DATABASE_HOST"]
 mysql.init_app(application)
 
+# redis
+db = redis.Redis(os.environ["REDIS_HOST"], decode_responses=True)
+
 
 @application.route('/')
 def main():
-    return "AWS 오류나지 마라"
+    return "핵심 쏙쏙 AWS"
 
 @application.route('/fileupload', methods=['POST'])
 def file_upload():
@@ -41,7 +45,12 @@ def file_upload():
     cursor = conn.cursor()
     cursor.execute("insert into file(file_name) value('" + file.filename + "')")
     conn.commit()
+
+
+    cursor.execute("SELECT count(*) from file")
+    data = cursor.fetchone()
     conn.close()
+    db.set("fileCount", data[0])
 
     return jsonify({'result': 'success'})
 
@@ -55,6 +64,9 @@ def files():
 
     return jsonify({'result': 'success', 'files':data})
 
+@application.route('/file/count', methods=['GET'])
+def file_count():
+    return jsonify({'result': 'success', 'count':db.get("fileCount")})
 
 if __name__ == '__main__':
     application.debug = True

@@ -20,7 +20,7 @@ mysql.init_app(application)
 
 @application.route('/')
 def main():
-    return "핵심 쏙쏙 AWS"
+    return "AWS 오류나지 마라"
 
 @application.route('/fileupload', methods=['POST'])
 def file_upload():
